@@ -1,0 +1,57 @@
+#! /bin/bash
+
+set -Eeuo pipefail
+
+# Set 'dynamic-dns' repository directory path
+ddns_repo_path="$(dirname "$0")"
+
+if [[ "${ddns_repo_path}" == "." ]]; then
+	ddns_repo_path="$(pwd)"
+fi
+
+# Get the current public IP and store it if a rudimentary RegEx check passes
+curr_public_ip=$(curl --silent https://ipinfo.io/ip)
+
+if [[ ! "${curr_public_ip}" =~ [0-9]+.[0-9]+.[0-9]+.[0-9]+ ]]; then
+	echo "Error: '${curr_public_ip}' RegEx failed."
+	exit 1
+else
+	echo "${curr_public_ip}" > "${ddns_repo_path}/public-ip-from-curl.txt"
+	curr_public_ip=$(cat "${ddns_repo_path}/public-ip-from-curl.txt")
+fi
+
+# Get `stored_public_ip` if it exists
+stored_public_ip=""
+
+if [[ -f "${ddns_repo_path}/public-ip-in-use.txt" ]]; then
+	stored_public_ip=$(cat "${ddns_repo_path}/public-ip-in-use.txt")
+fi
+
+# Compare current public IP with stored public IP
+if [[ "${curr_public_ip}" != "${stored_public_ip}" ]]; then
+	echo "${curr_public_ip}" > "${ddns_repo_path}/public-ip-in-use.txt"
+
+	# Update IP in Cloudflare
+	cloudflare_http_res_code=$(curl --request PATCH \
+		--url "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/dns_records/${CLOUDFLARE_DNS_RECORD_ID}" \
+		--header "Content-Type: application/json" \
+		--header "Authorization: Bearer ${CLOUDFLARE_AUTH_KEY}" \
+		--data "{
+				\"content\": \"${curr_public_ip}\",
+				\"name\": \"${CLOUDFLARE_DNS_RECORD_NAME}\",
+				\"type\": \"A\"
+			}" \
+		--silent \
+		--output /dev/null \
+		--write-out "%{http_code}")
+
+	if [[ "${cloudflare_http_res_code}" == "200" ]]; then
+		echo "Success! Public IP ${curr_public_ip} updated on Cloudflare."
+	else
+		printf "Error: Public IP ${curr_public_ip} updation on Cloudflare "
+		printf "failed with HTTP response code ${cloudflare_http_res_code}.\n"
+		exit 1
+	fi
+else
+	echo "Public IP not changed from ${stored_public_ip}."
+fi
