@@ -3,11 +3,7 @@
 set -Eeuo pipefail
 
 # Set 'dynamic-dns' repository directory path
-ddns_repo_path="$(dirname "$0")"
-
-if [[ "${ddns_repo_path}" == "." ]]; then
-	ddns_repo_path="$(pwd)"
-fi
+ddns_repo_path="$(dirname "$(realpath "$0")")"
 
 # Get the current public IP and store it if a rudimentary RegEx check passes
 curr_public_ip=$(curl --silent https://ipinfo.io/ip)
