@@ -5,15 +5,12 @@ set -Eeuo pipefail
 # Set 'dynamic-dns' repository directory path
 ddns_repo_path="$(dirname "$(realpath "$0")")"
 
-# Get the current public IP and store it if a rudimentary RegEx check passes
+# Get the current public IP and run a rudimentary IP RegEx check
 curr_public_ip=$(curl --silent https://ipinfo.io/ip)
 
 if [[ ! "${curr_public_ip}" =~ [0-9]+.[0-9]+.[0-9]+.[0-9]+ ]]; then
 	echo "Error: '${curr_public_ip}' RegEx failed."
 	exit 1
-else
-	echo "${curr_public_ip}" > "${ddns_repo_path}/public-ip-from-curl.txt"
-	curr_public_ip=$(cat "${ddns_repo_path}/public-ip-from-curl.txt")
 fi
 
 # Get `stored_public_ip` if it exists

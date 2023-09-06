@@ -8,15 +8,17 @@ A simple utility to update an existing DNS record on
 The main working is in the [`ddns` script](ddns).
 
 The script gets the public IP from [ipinfo.io/ip](https://ipinfo.io/ip) and
-after a rudimentary IP RegEx check, stores it in a file.
+conducts a rudimentary IP RegEx check.
 
-The script stores the previously found public IP in a file as well. (Obviously
-this file does not exist when the script is run for the first time.)
+The script stores the previously used public IP address in a file called
+`public-ip-in-use.txt`. (Obviously this file does not exist when the script is
+run for the first time.)
 
-The script compares the newly found public IP and the previously stored public
-IP addresses. If the IP addresses are the same, then it does nothing, but if the
-IP addresses don't match, it updates the newly found IP address in the
-previously found IP address file and on Cloudflare.
+The script compares the newly found public IP address and the previously used
+IP address stored in `public-ip-in-use.txt`. If the IP addresses are the same,
+then it does nothing, but if the IP addresses don't match, it replaces the IP
+address in the `public-ip-in-use.txt` file with the newly found IP address, and
+updates it on Cloudflare as well.
 
 A CRON job runs this script every 10 minutes, so that the DNS record on
 Cloudflare always has the current public IP address.
