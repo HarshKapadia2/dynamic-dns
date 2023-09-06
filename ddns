@@ -44,8 +44,9 @@ if [[ "${curr_public_ip}" != "${stored_public_ip}" ]]; then
 	if [[ "${cloudflare_http_res_code}" == "200" ]]; then
 		echo "Success! Public IP ${curr_public_ip} updated on Cloudflare."
 	else
-		printf "Error: Public IP ${curr_public_ip} updation on Cloudflare "
-		printf "failed with HTTP response code ${cloudflare_http_res_code}.\n"
+		printf "Error: Public IP %s updation on Cloudflare " "${curr_public_ip}"
+		printf "failed with HTTP response code %s.\n" \
+			"${cloudflare_http_res_code}"
 		exit 1
 	fi
 else
