@@ -22,8 +22,6 @@ fi
 
 # Compare current public IP with stored public IP
 if [[ "${curr_public_ip}" != "${stored_public_ip}" ]]; then
-	echo "${curr_public_ip}" > "${ddns_repo_path}/public-ip-in-use.txt"
-
 	# Update IP in Cloudflare
 	cloudflare_http_res_code=$(curl --request PATCH \
 		--url "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/dns_records/${CLOUDFLARE_DNS_RECORD_ID}" \
@@ -39,6 +37,8 @@ if [[ "${curr_public_ip}" != "${stored_public_ip}" ]]; then
 		--write-out "%{http_code}")
 
 	if [[ "${cloudflare_http_res_code}" == "200" ]]; then
+		# Update stored public IP
+		echo "${curr_public_ip}" > "${ddns_repo_path}/public-ip-in-use.txt"
 		echo "Success! Public IP ${curr_public_ip} updated on Cloudflare."
 	else
 		printf "Error: Public IP %s updation on Cloudflare " "${curr_public_ip}"
